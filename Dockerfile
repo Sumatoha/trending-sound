@@ -48,8 +48,7 @@ RUN mkdir -p /app/data
 # Set environment variables
 ENV DATA_DIR=/app/data
 
-# Volume for persistent data
-VOLUME /app/data
+# Note: Volume is created in Railway UI, not in Dockerfile
 
 # Expose health check (optional)
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=3 \
