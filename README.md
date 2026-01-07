@@ -74,9 +74,16 @@ docker run -e TELEGRAM_BOT_TOKEN=your_token -v $(pwd)/data:/app/data trending-so
 
 1. Создать новый проект на Railway
 2. Подключить GitHub репозиторий
-3. Добавить переменную окружения: `TELEGRAM_BOT_TOKEN`
-4. Создать Volume и примонтировать к `/app/data`
+3. Добавить переменные:
+   - `TELEGRAM_BOT_TOKEN` - ваш токен
+   - `DATA_DIR=/app/data`
+4. **Важно!** Создать Volume через Railway UI:
+   - Settings → Volumes → New Volume
+   - Mount Path: `/app/data`
+   - Без Volume база данных будет теряться при каждом деплое
 5. Деплой произойдет автоматически
+
+**Dockerfile исправлен** - строка `VOLUME` удалена (Railway требует создавать через UI)
 
 ## Переменные окружения
 
