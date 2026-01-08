@@ -119,8 +119,32 @@ func (b *Bot) handleTrending(message *tgbotapi.Message) {
 			continue
 		}
 
+		// If no trending sounds found (no history yet), show top sounds
 		if len(trending) == 0 {
-			msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("No trending sounds found for %s yet. Check back later!", parser.CategoryDisplayNames[niche]))
+			log.Printf("No trends for %s, showing top sounds instead", niche)
+			sounds, err := b.storage.GetSoundsByCategory(niche, 5)
+			if err != nil || len(sounds) == 0 {
+				msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("No sounds found for %s yet. Try again in a few minutes!", parser.CategoryDisplayNames[niche]))
+				b.api.Send(msg)
+				continue
+			}
+
+			// Convert to TrendingSound format (without growth)
+			var topSounds []storage.TrendingSound
+			for _, s := range sounds {
+				topSounds = append(topSounds, storage.TrendingSound{
+					Sound:         s,
+					GrowthPercent: 0,
+					OldUsesCount:  0,
+				})
+			}
+
+			categoryName := parser.CategoryDisplayNames[niche]
+			message := fmt.Sprintf("🎵 *Top Sounds - %s*\n\n_Note: Trend data will be available after 24 hours_\n\n", categoryName)
+			message += formatTopSounds(topSounds)
+
+			msg := tgbotapi.NewMessage(telegramID, message)
+			msg.ParseMode = "Markdown"
 			b.api.Send(msg)
 			continue
 		}
@@ -261,6 +285,21 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// formatTopSounds formats top sounds without growth percentage
+func formatTopSounds(sounds []storage.TrendingSound) string {
+	var message string
+	for i, ts := range sounds {
+		message += fmt.Sprintf("*%d. \"%s\"*", i+1, ts.Title)
+		if ts.Author != "" {
+			message += fmt.Sprintf(" by %s", ts.Author)
+		}
+		message += "\n"
+		message += fmt.Sprintf("   📊 Uses: %s\n", formatNumber(ts.UsesCount))
+		message += fmt.Sprintf("   🔗 [Listen](%s)\n\n", ts.URL)
+	}
+	return message
 }
 
 // handlePremium handles the /premium command

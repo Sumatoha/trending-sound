@@ -45,11 +45,16 @@ func (s *Scheduler) Start() {
 		s.SendAlerts()
 	})
 
-	// Run initial collection on startup (after a short delay)
+	// Run initial collection and alert on startup (after a short delay)
 	go func() {
 		time.Sleep(10 * time.Second)
 		log.Println("Running initial sound collection...")
 		s.CollectSounds()
+
+		// Wait a bit for data to be saved
+		time.Sleep(5 * time.Second)
+		log.Println("Sending initial alerts...")
+		s.SendAlerts()
 	}()
 
 	s.cron.Start()
